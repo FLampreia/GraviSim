@@ -1,34 +1,21 @@
 import math
 
-# Distance in X and Y (m)
-POS_EARTH = [0, 0]
-POS_MOON = [3.84e8, 0]
-
-# Velocity in X and Y (m/s)
-VELO_EARTH = [0, 0]
-VELO_MOON = [0, 1000]
-
 # Mass (kg)
 MASS_EARTH = 5.97e24
 MASS_MOON = 7.35e22
-
-# Distance (m)
-r = 3.84e8
 
 # Constants
 G = 6.67e-11  # (Nm**2/Kg**2)
 
 # Calculation step
-STEP = 60  # (s)
-NUMBER_STEPS = 100
-
-print("0 sec")
-print(VELO_MOON)
+STEP_JUMP_TIME = 60  # (s)
+NUMBER_STEPS = 43200
+PRINT_STEP = 360
 
 
 # Force that earth attracts the moon
 # (N)
-def forceEarthAttractsMoon():
+def forceEarthAttractsMoon(r):
 
     # Newton's Universal Gravitational Law
     # F = G (M1 * M2) / r**2
@@ -46,7 +33,7 @@ def accelerationFromForce(F, m):
 
 
 #
-def velocityAfterStep(a, step):
+def velocityVariationAfterStep(a, step):
     """
     acceleration is constant in each step
 
@@ -66,54 +53,64 @@ def velocityAfterStep(a, step):
 
 # Mean velocity with constant acceleration in each instant
 def meanVelocity(vi, vf):
-
     return (vi + vf) / 2
 
 
-F = forceEarthAttractsMoon()
+def main():
 
-# As moon is by the right side of the earth, acceleration needs to be negative
-ax = -accelerationFromForce(F, MASS_MOON)
+    # Distance in X and Y (m)
+    POS_EARTH = [0, 0]
+    POS_MOON = [3.84e8, 0]
 
-# -- 0 sec
+    # Velocity in X and Y (m/s)
+    VELO_EARTH = [0, 0]
+    VELO_MOON = [0, 1000]
 
-mean_vx = meanVelocity(VELO_MOON[0], velocityAfterStep(ax, STEP))
+    print(f"--- Start: ---")
+    print(f"Moon Position: {POS_MOON}")
+    print(f"Moon Velocity: {VELO_MOON}")
 
-VELO_MOON[0] = velocityAfterStep(ax, STEP)
+    for i in range(NUMBER_STEPS):
 
-print("60 sec")
-print(VELO_MOON)
+        # Distance from earth to moon
+        # Pytagoras theorem
+        d = math.sqrt(POS_MOON[0] ** 2 + POS_MOON[1] ** 2)
 
-dx = mean_vx * STEP
-dy = VELO_MOON[1] * STEP
+        F = forceEarthAttractsMoon(d)
 
-# New moon position
-POS_MOON[0] = POS_MOON[0] + dx
-POS_MOON[1] = POS_MOON[1] + dy
+        # As moon is by the right side of the earth, acceleration needs to be negative
+        a = -accelerationFromForce(F, MASS_MOON)
 
-# Distance from earth to moon
-# Pytagoras theorem
-d = math.sqrt(POS_MOON[0] ** 2 + POS_MOON[1] ** 2)
+        if i % PRINT_STEP == 0:
+            print(f"Moon Acceleration: {a}")
 
-# Acceleration on each axis on the new position
-ax = ax * (POS_MOON[0] / d)
-ay = ax * (POS_MOON[1] / d)
+        # Acceleration on each axis on the new position
+        ax = a * (POS_MOON[0] / d)
+        ay = a * (POS_MOON[1] / d)
 
-# -- 60 sec
+        mean_vx = meanVelocity(
+            VELO_MOON[0], VELO_MOON[0] + velocityVariationAfterStep(ax, STEP_JUMP_TIME)
+        )
+        mean_vy = meanVelocity(
+            VELO_MOON[1], VELO_MOON[1] + velocityVariationAfterStep(ay, STEP_JUMP_TIME)
+        )
 
-mean_vx = meanVelocity(VELO_MOON[0], VELO_MOON[0] + velocityAfterStep(ax, STEP))
-mean_vy = meanVelocity(VELO_MOON[1], VELO_MOON[1] + velocityAfterStep(ay, STEP))
+        VELO_MOON = [
+            VELO_MOON[0] + velocityVariationAfterStep(ax, STEP_JUMP_TIME),
+            VELO_MOON[1] + velocityVariationAfterStep(ay, STEP_JUMP_TIME),
+        ]
 
-VELO_MOON = [
-    VELO_MOON[0] + velocityAfterStep(ax, STEP),
-    VELO_MOON[1] + velocityAfterStep(ay, STEP),
-]
+        dx = mean_vx * STEP_JUMP_TIME
+        dy = mean_vy * STEP_JUMP_TIME
 
-dlcx = mean_vx * STEP
-dlcy = mean_vy * STEP
+        # New moon position
+        POS_MOON = [POS_MOON[0] + dx, POS_MOON[1] + dy]
 
-POS_MOON = [POS_MOON[0] + dlcx, POS_MOON[1] + dlcy]
+        if i % PRINT_STEP == 0:
+            print(f"--- After: {(i + 1) * STEP_JUMP_TIME} sec ---")
+            print(f"Moon Position: {POS_MOON}")
+            print(f"Moon Velocity: {VELO_MOON}")
 
-print("120 sec")
-print(VELO_MOON)
-print(POS_MOON)
+
+if __name__ == "__main__":
+    main()
