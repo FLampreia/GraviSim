@@ -32,16 +32,5 @@ def main():
     
     visualize(SIMULATIONS_BETWEEN_DRAW, TIME_BETWEEN_SIMULATIONS, earth, moon)
 
-    # list_pos = simulator(
-    #     NUMBER_STEPS,
-    #     PRINT_STEP,
-    #     STEP_JUMP_TIME,
-    #     earth,
-    #     moon,
-    # )
-
-    # visualize(list_pos)
-
-
 if __name__ == "__main__":
     main()
