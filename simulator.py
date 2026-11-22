@@ -64,6 +64,8 @@ def simulate(
 
     # Distance from earth to moon
     # Pytagoras theorem
+    # TODO: Generalizar a gravidade para usar a posição relativa entre os dois
+    # corpos e atualizar o movimento de ambos. Por agora, body1 fica fixo na origem.
     d = distance_to_earth(body2.position)
 
     F = newtonUniversalGravitationalLaw(d, body1.mass, body2.mass)
