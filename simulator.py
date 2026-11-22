@@ -1,4 +1,5 @@
 import math
+from celestial_body import CelestialBody
 
 
 def newtonUniversalGravitationalLaw(
@@ -45,7 +46,7 @@ def meanVelocityWithConstantAcceleration(vi, vf):
     return (vi + vf) / 2
 
 
-def distance_to_earth(position: list):
+def distance_to_earth(position: tuple):
     """Return the distance from (x, y) to Earth at the origin, in metres.
 
     The coordinates are in metres. By the Pythagorean theorem, the distance
@@ -59,10 +60,8 @@ def simulator(
     number_steps,
     print_steps,
     step_jump_time,
-    moon_pos,
-    moon_mass,
-    earth_mass,
-    moon_velocity,
+    body1: CelestialBody,
+    body2: CelestialBody,
 ):
     """Simulate the Moon in two dimensions and display its animated trajectory.
 
@@ -73,50 +72,51 @@ def simulator(
     # Store the initial position and the samples used by the plot.
     list_pos = []
 
-    list_pos.append(moon_pos)
-
-    print(list_pos)
+    list_pos.append(body2.position)
 
     for i in range(number_steps):
 
         # Distance from earth to moon
         # Pytagoras theorem
-        d = distance_to_earth(moon_pos)
+        d = distance_to_earth(body2.position)
 
-        F = newtonUniversalGravitationalLaw(d, earth_mass, moon_mass)
+        F = newtonUniversalGravitationalLaw(d, body1.mass, body2.mass)
 
         # The negative sign points the acceleration towards Earth.
-        a = -accelerationFromForce(F, moon_mass)
+        a = -accelerationFromForce(F, body2.mass)
 
         # Project the acceleration onto the x and y axes at the current position.
-        ax = a * (moon_pos[0] / d)
-        ay = a * (moon_pos[1] / d)
+        ax = a * (body2.position[0] / d)
+        ay = a * (body2.position[1] / d)
 
         # Use the mean velocity over the step to estimate the displacement.
         mean_vx = meanVelocityWithConstantAcceleration(
-            moon_velocity[0],
-            moon_velocity[0] + velocityVariationAfterStep(ax, step_jump_time),
+            body2.velocityX(),
+            body2.velocityX() + velocityVariationAfterStep(ax, step_jump_time),
         )
         mean_vy = meanVelocityWithConstantAcceleration(
-            moon_velocity[1],
-            moon_velocity[1] + velocityVariationAfterStep(ay, step_jump_time),
+            body2.velocityY(),
+            body2.velocityY() + velocityVariationAfterStep(ay, step_jump_time),
         )
 
-        moon_velocity = [
-            moon_velocity[0] + velocityVariationAfterStep(ax, step_jump_time),
-            moon_velocity[1] + velocityVariationAfterStep(ay, step_jump_time),
+        vx, vy = [
+            body2.velocityX() + velocityVariationAfterStep(ax, step_jump_time),
+            body2.velocityY() + velocityVariationAfterStep(ay, step_jump_time),
         ]
+        
+        body2.velocity = math.hypot(vx ,vy)
+        body2.velocityTheta = math.atan2(vy, vx)
 
         dx = mean_vx * step_jump_time
         dy = mean_vy * step_jump_time
 
         # New moon position
-        moon_pos = [moon_pos[0] + dx, moon_pos[1] + dy]
+        body2.position = (body2.position[0] + dx, body2.position[1] + dy)
 
         if (i + 1) % print_steps == 0:
 
             # save positions into list
-            list_pos.append(moon_pos)
+            list_pos.append(body2.position)
 
             # print(f"--- After: {(i + 1) * STEP_JUMP_TIME} sec ---")
             # print(f"Moon Position: {POS_MOON}")
