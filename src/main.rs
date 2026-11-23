@@ -25,8 +25,8 @@ fn main() {
         // Initialize once, advance physics in fixed steps, and update the visuals.
         // The order of these declarations does not set Bevy's schedule execution order.
         .add_systems(Startup, setup)
-        .add_systems(Update, (sync_visuals, toggle_pause))
-        .add_systems(FixedUpdate, (simulate, record_trails, draw_trails).chain())
+        .add_systems(Update, (sync_visuals, toggle_pause, draw_trails))
+        .add_systems(FixedUpdate, (simulate, record_trails).chain())
         // Each step represents 0.02 s of application time, before time scaling.
         .insert_resource(Time::<Fixed>::from_seconds(0.02))
         .run();
