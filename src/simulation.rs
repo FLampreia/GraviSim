@@ -15,9 +15,15 @@ use crate::celestial_body::CelestialBody;
 pub(crate) struct Simulation {
     pub(crate) earth: CelestialBody,
     pub(crate) moon: CelestialBody,
+    pub(crate) paused: bool,
+    pub(crate) elapsed_seconds: f64,
 }
 
 pub(crate) fn simulate(time: Res<Time<Fixed>>, simulation: ResMut<Simulation>) {
+    if simulation.paused == true {
+        return;
+    }
+
     // Res reads the clock; ResMut allows changes to the physical state.
     // A direct reference allows separate mutable borrows of the two fields.
     let state: &mut Simulation = simulation.into_inner();
@@ -28,6 +34,8 @@ pub(crate) fn simulate(time: Res<Time<Fixed>>, simulation: ResMut<Simulation>) {
 
     // One step per system execution; Bevy repeats FixedUpdate as needed.
     simulate_step(&mut state.earth, &mut state.moon, seconds);
+
+    state.elapsed_seconds += seconds;
 }
 
 // Velocity Verlet: positions -> new accelerations -> velocities.

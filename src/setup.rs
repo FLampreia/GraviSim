@@ -41,7 +41,7 @@ pub(crate) fn setup(mut commands: Commands) {
         mass: 7.35e22,
         position: (3.84e8, 0.0),
         velocity: (0.0, 1000.0),
-        acceleration: (0.0, 0.0), 
+        acceleration: (0.0, 0.0),
     };
 
     // Velocity Verlet needs the initial acceleration before advancing positions.
@@ -51,7 +51,12 @@ pub(crate) fn setup(mut commands: Commands) {
         gravitational_acceleration(earth.position, moon.position, earth.mass, moon.mass);
 
     // Ownership of both bodies moves into Simulation; the local bindings can no longer be used.
-    let simulation: Simulation = Simulation { earth, moon };
+    let simulation: Simulation = Simulation {
+        earth,
+        moon,
+        paused: false,
+        elapsed_seconds: 0.0,
+    };
 
     // Bevy stores this state; systems access it through Res or ResMut.
     commands.insert_resource(simulation);
