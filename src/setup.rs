@@ -1,5 +1,7 @@
 //! Creates visual entities and initial conditions for the Earth–Moon system.
 
+use std::collections::VecDeque;
+
 use bevy::{
     camera::Camera2d, color::Color, ecs::system::Commands, math::Vec2, sprite::Sprite,
     transform::components::Transform,
@@ -7,6 +9,7 @@ use bevy::{
 
 use crate::celestial_body::CelestialBody;
 use crate::simulation::{Simulation, gravitational_acceleration};
+use crate::trails::TrailHistory;
 use crate::visualization::{Earth, Moon};
 
 // `pub(crate)` allows access from other modules in this program.
@@ -24,7 +27,7 @@ pub(crate) fn setup(mut commands: Commands) {
 
     commands.spawn((
         Moon,
-        Sprite::from_color(Color::srgb(0.7, 0.7, 1.7), Vec2::new(16.0, 16.0)),
+        Sprite::from_color(Color::srgb(0.7, 0.7, 0.7), Vec2::new(16.0, 16.0)),
         Transform::from_xyz(0.0, 0.0, 0.0),
     ));
 
@@ -50,6 +53,14 @@ pub(crate) fn setup(mut commands: Commands) {
     moon.acceleration =
         gravitational_acceleration(earth.position, moon.position, earth.mass, moon.mass);
 
+    let mut trail: TrailHistory = TrailHistory {
+        earth: VecDeque::new(),
+        moon: VecDeque::new(),
+    };
+
+    trail.earth.push_back(earth.position);
+    trail.moon.push_back(moon.position);
+
     // Ownership of both bodies moves into Simulation; the local bindings can no longer be used.
     let simulation: Simulation = Simulation {
         earth,
@@ -60,4 +71,5 @@ pub(crate) fn setup(mut commands: Commands) {
 
     // Bevy stores this state; systems access it through Res or ResMut.
     commands.insert_resource(simulation);
+    commands.insert_resource(trail);
 }

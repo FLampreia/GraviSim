@@ -36,6 +36,7 @@ pub(crate) fn simulate(time: Res<Time<Fixed>>, simulation: ResMut<Simulation>) {
     simulate_step(&mut state.earth, &mut state.moon, seconds);
 
     state.elapsed_seconds += seconds;
+    
 }
 
 // Velocity Verlet: positions -> new accelerations -> velocities.

@@ -6,9 +6,10 @@ mod controls;
 mod setup;
 mod simulation;
 mod visualization;
+mod trails;
 
 use crate::{
-    controls::toggle_pause, setup::setup, simulation::simulate, visualization::sync_visuals,
+    controls::toggle_pause, setup::setup, simulation::simulate, trails::{draw_trails, record_trails}, visualization::sync_visuals,
 };
 use bevy::prelude::*;
 
@@ -25,7 +26,7 @@ fn main() {
         // The order of these declarations does not set Bevy's schedule execution order.
         .add_systems(Startup, setup)
         .add_systems(Update, (sync_visuals, toggle_pause))
-        .add_systems(FixedUpdate, simulate)
+        .add_systems(FixedUpdate, (simulate, record_trails, draw_trails).chain())
         // Each step represents 0.02 s of application time, before time scaling.
         .insert_resource(Time::<Fixed>::from_seconds(0.02))
         .run();

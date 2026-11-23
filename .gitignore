@@ -1,6 +1,7 @@
 .venv/
 .vscode/
 AGENTS.md
+ROADMAP.md
 __pycache__/
 
 # Added by cargo
