@@ -7,7 +7,11 @@ use bevy::{
         resource::Resource,
         system::{Query, Res, ResMut},
     },
-    input::{ButtonInput, keyboard::KeyCode, mouse::AccumulatedMouseScroll},
+    input::{
+        ButtonInput,
+        keyboard::KeyCode,
+        mouse::{AccumulatedMouseScroll, MouseScrollPixelsPerLine},
+    },
     math::Vec2,
     time::Time,
     transform::components::Transform,
@@ -51,18 +55,15 @@ pub(crate) fn reset_simulation(
 
 pub(crate) fn zoom_camera(
     scroll: Res<AccumulatedMouseScroll>,
+    scroll_per_line: Res<MouseScrollPixelsPerLine>,
     mut cameras: Query<&mut Projection, With<Camera2d>>,
 ) {
+    let scroll_lines: AccumulatedMouseScroll = scroll.to_lines(&scroll_per_line);
+    let zoom_factor: f32 = 1.1_f32.powf(-scroll_lines.delta.y);
+
     for mut projection in &mut cameras {
         if let Projection::Orthographic(orthographic) = &mut *projection {
-            // Scroll direction selects one zoom step per frame.
-            if scroll.delta.y > 0.0 {
-                orthographic.scale /= 1.1
-            }
-
-            if scroll.delta.y < 0.0 {
-                orthographic.scale *= 1.1
-            }
+            orthographic.scale *= zoom_factor;
 
             // Store the clamped value; clamp does not modify scale in place.
             orthographic.scale = orthographic.scale.clamp(0.1, 10.0)
