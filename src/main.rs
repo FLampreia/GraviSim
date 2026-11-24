@@ -5,11 +5,15 @@ mod celestial_body;
 mod controls;
 mod setup;
 mod simulation;
-mod visualization;
 mod trails;
+mod visualization;
 
 use crate::{
-    controls::toggle_pause, setup::setup, simulation::simulate, trails::{draw_trails, record_trails}, visualization::sync_visuals,
+    controls::{toggle_pause, zoom},
+    setup::setup,
+    simulation::simulate,
+    trails::{draw_trails, record_trails},
+    visualization::sync_visuals,
 };
 use bevy::prelude::*;
 
@@ -25,7 +29,7 @@ fn main() {
         // Initialize once, advance physics in fixed steps, and update the visuals.
         // The order of these declarations does not set Bevy's schedule execution order.
         .add_systems(Startup, setup)
-        .add_systems(Update, (sync_visuals, toggle_pause, draw_trails))
+        .add_systems(Update, (sync_visuals, toggle_pause, draw_trails, zoom))
         .add_systems(FixedUpdate, (simulate, record_trails).chain())
         // Each step represents 0.02 s of application time, before time scaling.
         .insert_resource(Time::<Fixed>::from_seconds(0.02))
