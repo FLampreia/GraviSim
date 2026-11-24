@@ -8,15 +8,22 @@ use bevy::{
     time::{Fixed, Time},
 };
 
-use crate::{celestial_body::CelestialBody, config::TIME_SCALE};
+use crate::{
+    celestial_body::CelestialBody,
+    config::{PHYSICS_STEP_SECONDS, TIME_SCALE},
+    trails::{TrailHistory, record_trails},
+};
 
-// A resource holds the shared physical state; sprites only represent it.
+// Shared physical state, independent of its visual representation.
 #[derive(Resource)]
 pub(crate) struct Simulation {
     pub(crate) earth: CelestialBody,
     pub(crate) moon: CelestialBody,
     pub(crate) paused: bool,
+    // Physical time already integrated, in seconds.
     pub(crate) elapsed_seconds: f64,
+    // Physical time awaiting integration, in seconds.
+    pub(crate) pending_seconds: f64,
 }
 
 impl Simulation {
@@ -27,6 +34,7 @@ impl Simulation {
             position: (0.0, 0.0),
             velocity: (0.0, 0.0),
             acceleration: (0.0, 0.0),
+            radius: 6.371e6,
         };
 
         let mut moon: CelestialBody = CelestialBody {
@@ -34,6 +42,7 @@ impl Simulation {
             position: (3.84e8, 0.0),
             velocity: (0.0, 1000.0),
             acceleration: (0.0, 0.0),
+            radius: 1.737e6
         };
 
         // Velocity Verlet needs the initial acceleration before advancing positions.
@@ -47,24 +56,35 @@ impl Simulation {
             moon,
             paused: false,
             elapsed_seconds: 0.0,
+            pending_seconds: 0.0,
         }
     }
 }
 
-pub(crate) fn simulate(time: Res<Time<Fixed>>, simulation: ResMut<Simulation>) {
+pub(crate) fn simulate(
+    time: Res<Time<Fixed>>,
+    mut simulation: ResMut<Simulation>,
+    mut trail: ResMut<TrailHistory>,
+) {
     if simulation.paused == true {
         return;
     }
 
+    // Convert application time to physical seconds.
+    simulation.pending_seconds += time.delta_secs_f64() * TIME_SCALE;
+
     // A direct reference allows separate mutable borrows of both bodies.
     let state: &mut Simulation = simulation.into_inner();
 
-    // 0.02 application seconds becomes 60 physical seconds; larger steps reduce accuracy.
-    let seconds: f64 = time.delta_secs_f64() * TIME_SCALE;
+    // Each iteration advances one fixed physical step.
+    while state.pending_seconds >= PHYSICS_STEP_SECONDS {
+        simulate_step(&mut state.earth, &mut state.moon, PHYSICS_STEP_SECONDS);
+        state.elapsed_seconds += PHYSICS_STEP_SECONDS;
+        state.pending_seconds -= PHYSICS_STEP_SECONDS;
 
-    simulate_step(&mut state.earth, &mut state.moon, seconds);
-
-    state.elapsed_seconds += seconds;
+        // Store every completed step, including intermediate steps in this update.
+        record_trails(state, &mut trail);
+    }
 }
 
 // Velocity Verlet advances both bodies from the same initial instant by dt seconds.

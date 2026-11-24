@@ -1,12 +1,13 @@
 //! Physical body data and update formulas, independent of Bevy.
 
-// Point masses in 2D; no radii or collisions.
+// 2D point-mass gravity with physical radii for rendering; no collisions.
 pub(crate) struct CelestialBody {
     // SI units: kg, m, m/s, m/s². Pairs are (x, y); physics uses f64 precision.
     pub(crate) mass: f64,
     pub(crate) position: (f64, f64),
     pub(crate) velocity: (f64, f64),
     pub(crate) acceleration: (f64, f64),
+    pub(crate) radius: f64, // Physical radius in metres.
 }
 
 impl CelestialBody {

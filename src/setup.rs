@@ -2,31 +2,48 @@
 
 use std::collections::VecDeque;
 
+use bevy::asset::Assets;
+use bevy::ecs::system::ResMut;
+use bevy::mesh::{Mesh, Mesh2d};
+use bevy::shape::Circle;
+use bevy::sprite_render::{ColorMaterial, MeshMaterial2d};
 use bevy::{
-    camera::Camera2d, color::Color, ecs::system::Commands, math::Vec2, sprite::Sprite,
-    transform::components::Transform,
+    camera::Camera2d, color::Color, ecs::system::Commands, transform::components::Transform,
 };
 
 use crate::simulation::Simulation;
 use crate::trails::TrailHistory;
 use crate::visualization::{Earth, Moon};
 
-pub(crate) fn setup(mut commands: Commands) {
+pub(crate) fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
     commands.spawn(Camera2d);
 
-    // Sprite sizes are illustrative; Bevy adds a default Transform when omitted.
+    // Unit circles; sync_visuals applies physical radii at the rendering scale.
+    let earth_mesh = meshes.add(Circle::new(1.0));
+    let earth_material = materials.add(Color::srgb(0.0, 0.0, 1.0));
+
+    let moon_mesh = meshes.add(Circle::new(1.0));
+    let moon_material = materials.add(Color::srgb(0.7, 0.7, 0.7));
+
     commands.spawn((
         Earth,
-        Sprite::from_color(Color::srgb(0.0, 0.0, 1.0), Vec2::new(40.0, 40.0)),
+        Mesh2d(earth_mesh),
+        MeshMaterial2d(earth_material),
+        Transform::default(),
     ));
 
     commands.spawn((
         Moon,
-        Sprite::from_color(Color::srgb(0.7, 0.7, 0.7), Vec2::new(16.0, 16.0)),
-        Transform::from_xyz(0.0, 0.0, 0.0),
+        Mesh2d(moon_mesh),
+        MeshMaterial2d(moon_material),
+        Transform::default(),
     ));
 
-    // Move ownership of both bodies into the shared simulation state.
+    // Reuse the same initial conditions at startup and on reset.
     let simulation: Simulation = Simulation::initial();
 
     let mut trail: TrailHistory = TrailHistory {

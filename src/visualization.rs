@@ -1,4 +1,4 @@
-//! Converts physical positions in the resource into entity rendering positions.
+//! Synchronizes body positions and visual sizes with physical data.
 
 use bevy::{
     ecs::{
@@ -24,14 +24,21 @@ pub(crate) fn sync_visuals(
     mut query_earth: Query<&mut Transform, (With<Earth>, Without<Moon>)>,
     mut query_moon: Query<&mut Transform, (With<Moon>, Without<Earth>)>,
 ) {
-    // Set absolute positions at (METERS_PER_UNIT) metres per rendering unit; convert to f32 last.
+    // Convert metres to rendering units in f64, then cast to f32.
     for mut transform in &mut query_earth {
         transform.translation.x = (simulation.earth.position.0 / METERS_PER_UNIT) as f32;
         transform.translation.y = (simulation.earth.position.1 / METERS_PER_UNIT) as f32;
+
+        // Equal x/y scales preserve the unit mesh's circular shape.
+        transform.scale.x = (simulation.earth.radius / METERS_PER_UNIT) as f32;
+        transform.scale.y = (simulation.earth.radius / METERS_PER_UNIT) as f32;
     }
 
     for mut transform in &mut query_moon {
         transform.translation.x = (simulation.moon.position.0 / METERS_PER_UNIT) as f32;
         transform.translation.y = (simulation.moon.position.1 / METERS_PER_UNIT) as f32;
+
+        transform.scale.x = (simulation.moon.radius / METERS_PER_UNIT) as f32;
+        transform.scale.y = (simulation.moon.radius / METERS_PER_UNIT) as f32;
     }
 }

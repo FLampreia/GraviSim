@@ -13,7 +13,7 @@ use crate::{
     controls::{CameraMode, move_camera, reset_simulation, toggle_pause, zoom_camera},
     setup::setup,
     simulation::simulate,
-    trails::{draw_trails, record_trails},
+    trails::draw_trails,
     ui::{setup_ui, update_ui},
     visualization::sync_visuals,
 };
@@ -42,9 +42,9 @@ fn main() {
                 reset_simulation.after(toggle_pause),
             ),
         )
-        // Record trails after each completed physics step.
-        .add_systems(FixedUpdate, (simulate, record_trails).chain())
-        // 0.02 application seconds per step, before the physical time multiplier.
+        // simulate records trails after each internal physics step.
+        .add_systems(FixedUpdate, simulate)
+        // Schedule physics every 0.02 application seconds; integration has its own timestep.
         .insert_resource(Time::<Fixed>::from_seconds(0.02))
         .insert_resource(CameraMode::Free)
         .run();
