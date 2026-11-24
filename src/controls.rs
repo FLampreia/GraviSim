@@ -66,7 +66,12 @@ pub(crate) fn move_camera(
 
     pos = pos.normalize_or_zero();
 
-    let velocity: f32 = 300.0;
+    let mut velocity: f32 = 300.0;
+
+    if button.pressed(KeyCode::ShiftLeft) {
+        velocity *= 2.0;
+    }
+
     let displacement: Vec2 = Vec2::new(
         pos.x * velocity * time.delta_secs(),
         pos.y * velocity * time.delta_secs(),
