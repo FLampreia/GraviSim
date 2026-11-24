@@ -12,14 +12,10 @@ use crate::simulation::{Simulation, gravitational_acceleration};
 use crate::trails::TrailHistory;
 use crate::visualization::{Earth, Moon};
 
-// `pub(crate)` allows access from other modules in this program.
-// Bevy provides Commands; entity creation requests are applied later.
 pub(crate) fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
 
-    // Sprite sizes are visual choices and do not represent physical radii to scale.
-    // Sprite lists Transform as a required component:
-    // Bevy adds a default transform when one is not supplied.
+    // Sprite sizes are illustrative; Bevy adds a default Transform when omitted.
     commands.spawn((
         Earth,
         Sprite::from_color(Color::srgb(0.0, 0.0, 1.0), Vec2::new(40.0, 40.0)),
@@ -31,8 +27,7 @@ pub(crate) fn setup(mut commands: Commands) {
         Transform::from_xyz(0.0, 0.0, 0.0),
     ));
 
-    // Initial frame: Earth at rest at the origin; Moon to the right and moving upward.
-    // Total linear momentum is nonzero, so the centre of mass moves.
+    // Earth starts at rest; the moving Moon gives the centre of mass a nonzero velocity.
     let mut earth: CelestialBody = CelestialBody {
         mass: 5.97e24,
         position: (0.0, 0.0),
@@ -61,7 +56,7 @@ pub(crate) fn setup(mut commands: Commands) {
     trail.earth.push_back(earth.position);
     trail.moon.push_back(moon.position);
 
-    // Ownership of both bodies moves into Simulation; the local bindings can no longer be used.
+    // Move ownership of both bodies into the shared simulation state.
     let simulation: Simulation = Simulation {
         earth,
         moon,
@@ -69,7 +64,6 @@ pub(crate) fn setup(mut commands: Commands) {
         elapsed_seconds: 0.0,
     };
 
-    // Bevy stores this state; systems access it through Res or ResMut.
     commands.insert_resource(simulation);
     commands.insert_resource(trail);
 }

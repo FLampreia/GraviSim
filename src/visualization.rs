@@ -18,17 +18,13 @@ pub(crate) struct Earth;
 #[derive(Component)]
 pub(crate) struct Moon;
 
-// Res provides read access to physics; only Transform components are modified.
-// Without filters make the two queries mutually exclusive,
-// allowing Bevy to verify that they cannot modify the same Transform.
+// Without filters prevent the mutable queries from accessing the same entity.
 pub(crate) fn sync_visuals(
     simulation: Res<Simulation>,
     mut query_earth: Query<&mut Transform, (With<Earth>, Without<Moon>)>,
     mut query_moon: Query<&mut Transform, (With<Moon>, Without<Earth>)>,
 ) {
-    // Scale: 1e6 metres per rendering unit. Divide in f64 before converting
-    // to Transform's f32; this precision loss only affects the visuals.
-    // Copy the absolute position to avoid accumulating errors in the visuals.
+    // Set absolute positions at 1e6 metres per rendering unit; convert to f32 last.
     for mut transform in &mut query_earth {
         transform.translation.x = (simulation.earth.position.0 / 1e6) as f32;
         transform.translation.y = (simulation.earth.position.1 / 1e6) as f32;
