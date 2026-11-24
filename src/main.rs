@@ -5,6 +5,7 @@ mod controls;
 mod setup;
 mod simulation;
 mod trails;
+mod ui;
 mod visualization;
 
 use crate::{
@@ -12,6 +13,7 @@ use crate::{
     setup::setup,
     simulation::simulate,
     trails::{draw_trails, record_trails},
+    ui::{setup_ui, update_ui},
     visualization::sync_visuals,
 };
 use bevy::prelude::*;
@@ -26,7 +28,7 @@ fn main() {
             ..default()
         }))
         // Startup runs once; Update handles visuals and controls each frame.
-        .add_systems(Startup, setup)
+        .add_systems(Startup, (setup, setup_ui))
         .add_systems(
             Update,
             (
@@ -35,6 +37,7 @@ fn main() {
                 draw_trails,
                 zoom_camera,
                 move_camera,
+                update_ui.after(toggle_pause),
             ),
         )
         // Record trails after each completed physics step.
