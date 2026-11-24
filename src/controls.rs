@@ -13,7 +13,7 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::simulation::Simulation;
+use crate::{config::METERS_PER_UNIT, simulation::Simulation, trails::TrailHistory};
 
 // Persistent camera mode; only Free allows manual movement.
 #[derive(Resource)]
@@ -27,6 +27,25 @@ pub(crate) enum CameraMode {
 pub(crate) fn toggle_pause(button: Res<ButtonInput<KeyCode>>, mut simulation: ResMut<Simulation>) {
     if button.just_pressed(KeyCode::Space) {
         simulation.paused = !simulation.paused;
+    }
+}
+
+pub(crate) fn reset_simulation(
+    button: Res<ButtonInput<KeyCode>>,
+    mut simulation: ResMut<Simulation>,
+    mut trail: ResMut<TrailHistory>,
+) {
+    if button.just_pressed(KeyCode::KeyR) {
+        *simulation = Simulation::initial();
+        simulation.paused = true;
+
+        trail.earth.clear();
+        trail.moon.clear();
+
+        trail.earth.push_back(simulation.earth.position);
+        trail.moon.push_back(simulation.moon.position);
+    } else {
+        return;
     }
 }
 
@@ -114,26 +133,26 @@ pub(crate) fn move_camera(
                 transform.translation.y += displacement.y;
             }
             CameraMode::CenterOfMass => {
-                // Mass-weighted position in metres, then 1e6 metres per rendering unit.
+                // Mass-weighted position in metres, then (METERS_PER_UNIT) metres per rendering unit.
                 transform.translation.x = ((((simulation.earth.mass
                     * simulation.earth.position.0)
                     + (simulation.moon.mass * simulation.moon.position.0))
                     / (simulation.earth.mass + simulation.moon.mass))
-                    / 1e6) as f32;
+                    / METERS_PER_UNIT) as f32;
                 transform.translation.y = ((((simulation.earth.mass
                     * simulation.earth.position.1)
                     + (simulation.moon.mass * simulation.moon.position.1))
                     / (simulation.earth.mass + simulation.moon.mass))
-                    / 1e6) as f32;
+                    / METERS_PER_UNIT) as f32;
             }
             CameraMode::Earth => {
                 // Set the camera position each frame to follow the body.
-                transform.translation.x = (simulation.earth.position.0 / 1e6) as f32;
-                transform.translation.y = (simulation.earth.position.1 / 1e6) as f32;
+                transform.translation.x = (simulation.earth.position.0 / METERS_PER_UNIT) as f32;
+                transform.translation.y = (simulation.earth.position.1 / METERS_PER_UNIT) as f32;
             }
             CameraMode::Moon => {
-                transform.translation.x = (simulation.moon.position.0 / 1e6) as f32;
-                transform.translation.y = (simulation.moon.position.1 / 1e6) as f32;
+                transform.translation.x = (simulation.moon.position.0 / METERS_PER_UNIT) as f32;
+                transform.translation.y = (simulation.moon.position.1 / METERS_PER_UNIT) as f32;
             }
         }
     }

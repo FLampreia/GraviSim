@@ -8,7 +8,7 @@ use bevy::{
     time::{Fixed, Time},
 };
 
-use crate::celestial_body::CelestialBody;
+use crate::{celestial_body::CelestialBody, config::TIME_SCALE};
 
 // A resource holds the shared physical state; sprites only represent it.
 #[derive(Resource)]
@@ -17,6 +17,38 @@ pub(crate) struct Simulation {
     pub(crate) moon: CelestialBody,
     pub(crate) paused: bool,
     pub(crate) elapsed_seconds: f64,
+}
+
+impl Simulation {
+    pub(crate) fn initial() -> Self {
+        // Earth starts at rest; the moving Moon gives the centre of mass a nonzero velocity.
+        let mut earth: CelestialBody = CelestialBody {
+            mass: 5.97e24,
+            position: (0.0, 0.0),
+            velocity: (0.0, 0.0),
+            acceleration: (0.0, 0.0),
+        };
+
+        let mut moon: CelestialBody = CelestialBody {
+            mass: 7.35e22,
+            position: (3.84e8, 0.0),
+            velocity: (0.0, 1000.0),
+            acceleration: (0.0, 0.0),
+        };
+
+        // Velocity Verlet needs the initial acceleration before advancing positions.
+        earth.acceleration =
+            gravitational_acceleration(moon.position, earth.position, moon.mass, earth.mass);
+        moon.acceleration =
+            gravitational_acceleration(earth.position, moon.position, earth.mass, moon.mass);
+
+        Simulation {
+            earth,
+            moon,
+            paused: false,
+            elapsed_seconds: 0.0,
+        }
+    }
 }
 
 pub(crate) fn simulate(time: Res<Time<Fixed>>, simulation: ResMut<Simulation>) {
@@ -28,7 +60,7 @@ pub(crate) fn simulate(time: Res<Time<Fixed>>, simulation: ResMut<Simulation>) {
     let state: &mut Simulation = simulation.into_inner();
 
     // 0.02 application seconds becomes 60 physical seconds; larger steps reduce accuracy.
-    let seconds: f64 = time.delta_secs_f64() * 3000.0;
+    let seconds: f64 = time.delta_secs_f64() * TIME_SCALE;
 
     simulate_step(&mut state.earth, &mut state.moon, seconds);
 

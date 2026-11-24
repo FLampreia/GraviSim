@@ -1,6 +1,7 @@
 //! Entry point: configures Bevy and schedules each system.
 
 mod celestial_body;
+mod config;
 mod controls;
 mod setup;
 mod simulation;
@@ -9,7 +10,7 @@ mod ui;
 mod visualization;
 
 use crate::{
-    controls::{CameraMode, move_camera, toggle_pause, zoom_camera},
+    controls::{CameraMode, move_camera, reset_simulation, toggle_pause, zoom_camera},
     setup::setup,
     simulation::simulate,
     trails::{draw_trails, record_trails},
@@ -32,12 +33,13 @@ fn main() {
         .add_systems(
             Update,
             (
-                sync_visuals,
+                sync_visuals.after(reset_simulation),
                 toggle_pause,
-                draw_trails,
+                draw_trails.after(reset_simulation),
                 zoom_camera,
-                move_camera,
-                update_ui.after(toggle_pause),
+                move_camera.after(reset_simulation),
+                update_ui.after(toggle_pause).after(reset_simulation),
+                reset_simulation.after(toggle_pause),
             ),
         )
         // Record trails after each completed physics step.

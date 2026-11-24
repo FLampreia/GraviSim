@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::simulation::Simulation;
+use crate::{
+    config::{METERS_PER_UNIT, TIME_SCALE},
+    simulation::Simulation,
+};
 
 #[derive(Component)]
 pub(crate) struct SimulationStatus;
@@ -36,8 +39,13 @@ pub(crate) fn update_ui(
 
     for mut text in &mut status {
         text.0 = format!(
-            "Physical Time: {} d {:02} h {:02} min | {}",
-            days, hours, minutes, state
+            "Physical Time: {} d {:02} h {:02} min | {}\nSpatial scale: 1 unit = {:.0} km\nTime scale: {:.0}x",
+            days,
+            hours,
+            minutes,
+            state,
+            (METERS_PER_UNIT / 1000.0),
+            TIME_SCALE
         )
     }
 }

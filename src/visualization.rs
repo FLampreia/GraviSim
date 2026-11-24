@@ -9,7 +9,7 @@ use bevy::{
     transform::components::Transform,
 };
 
-use crate::simulation::Simulation;
+use crate::{config::METERS_PER_UNIT, simulation::Simulation};
 
 // Fieldless markers identify each body's visual entity in queries.
 #[derive(Component)]
@@ -24,14 +24,14 @@ pub(crate) fn sync_visuals(
     mut query_earth: Query<&mut Transform, (With<Earth>, Without<Moon>)>,
     mut query_moon: Query<&mut Transform, (With<Moon>, Without<Earth>)>,
 ) {
-    // Set absolute positions at 1e6 metres per rendering unit; convert to f32 last.
+    // Set absolute positions at (METERS_PER_UNIT) metres per rendering unit; convert to f32 last.
     for mut transform in &mut query_earth {
-        transform.translation.x = (simulation.earth.position.0 / 1e6) as f32;
-        transform.translation.y = (simulation.earth.position.1 / 1e6) as f32;
+        transform.translation.x = (simulation.earth.position.0 / METERS_PER_UNIT) as f32;
+        transform.translation.y = (simulation.earth.position.1 / METERS_PER_UNIT) as f32;
     }
 
     for mut transform in &mut query_moon {
-        transform.translation.x = (simulation.moon.position.0 / 1e6) as f32;
-        transform.translation.y = (simulation.moon.position.1 / 1e6) as f32;
+        transform.translation.x = (simulation.moon.position.0 / METERS_PER_UNIT) as f32;
+        transform.translation.y = (simulation.moon.position.1 / METERS_PER_UNIT) as f32;
     }
 }

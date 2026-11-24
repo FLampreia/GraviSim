@@ -12,7 +12,7 @@ use bevy::{
     math::Vec2,
 };
 
-use crate::simulation::Simulation;
+use crate::{config::METERS_PER_UNIT, simulation::Simulation};
 
 // Bounded queues of (x, y) positions in metres, oldest first.
 #[derive(Resource)]
@@ -43,16 +43,22 @@ pub(crate) fn record_trails(simulation: Res<Simulation>, mut trail: ResMut<Trail
 
 // Redraw gizmos every frame, including while paused; history stays unchanged.
 pub(crate) fn draw_trails(trail: Res<TrailHistory>, mut gizmo: Gizmos) {
-    // Use the sprites' scale: divide metres by 1e6 before converting to f32.
+    // Use the sprites' scale: divide metres by (METERS_PER_UNIT) before converting to f32.
     let earth_points = trail.earth.iter().map(|position: &(f64, f64)| {
-        Vec2::new((position.0 / 1e6) as f32, (position.1 / 1e6) as f32)
+        Vec2::new(
+            (position.0 / METERS_PER_UNIT) as f32,
+            (position.1 / METERS_PER_UNIT) as f32,
+        )
     });
 
     // Connect consecutive points directly from the iterator.
     gizmo.linestrip_2d(earth_points, Color::srgb(0.0, 0.0, 1.0));
 
     let moon_points = trail.moon.iter().map(|position: &(f64, f64)| {
-        Vec2::new((position.0 / 1e6) as f32, (position.1 / 1e6) as f32)
+        Vec2::new(
+            (position.0 / METERS_PER_UNIT) as f32,
+            (position.1 / METERS_PER_UNIT) as f32,
+        )
     });
 
     gizmo.linestrip_2d(moon_points, Color::srgb(0.7, 0.7, 0.7));
